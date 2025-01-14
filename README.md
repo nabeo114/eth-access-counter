@@ -2,6 +2,12 @@
 
 This guide provides step-by-step instructions to set up the environment for the Hacktivation-2024 project.
 
+**Install Node.js Dependencies:**
+At the root of the project, run the following command to install all required dependencies:
+```bash
+npm install
+```
+
 ## 1. Contract Development
 Navigate to the `packages/contract` directory.
 
