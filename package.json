@@ -11,6 +11,8 @@
   "license": "ISC",
   "workspaces": [
     "packages/frontend",
-    "packages/contract"
+    "packages/backend",
+    "packages/contract",
+    "packages/sample"
   ]
 }
