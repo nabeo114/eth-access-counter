@@ -65,14 +65,14 @@ export async function createCounter(initCount: number, digit: number): Promise<{
 
 // キリ番を判定する関数
 function isMilestoneNumber(num: number) {
-  if (num < 100) return false; // 100未満は対象外
+//  if (num < 100) return false; // 100未満は対象外
+  if (num < 10) return false;
 
   const numStr = num.toString();
-  const firstDigit = numStr[0];  // 最上位の桁
-  const rest = numStr.slice(1);  // 残りの桁
+  const rest = numStr.slice(1); // 最上位の桁を除いた残りの部分
 
   // 例: 100, 5000, 700000 のような数か、ゾロ目か
-  return /^0+$/.test(rest) || /^(\d)\1+$/.test(numStr);
+  return rest.length > 0 && /^0+$/.test(rest) || /^(\d)\1+$/.test(numStr);
 }
 
 // カウンタをインクリメントする非同期関数
@@ -83,9 +83,7 @@ export async function incrementCount(counterId: string, accessIp: string, addres
       throw new Error("Counter data file does not exist");
     }
 
-    console.log(counterId);
-    console.log(accessIp);
-    console.log(address);
+    console.log({ counterId, accessIp, address });
 
     const fileContent = fs.readFileSync(counterDataFilePath, "utf-8");
     const existingData = JSON.parse(fileContent) as CounterData[];
@@ -103,7 +101,7 @@ export async function incrementCount(counterId: string, accessIp: string, addres
       counterData.updated = Math.floor(Date.now() / 1000);
 //    }
 
-    // T.B.D addressが有効でカウンタがキリ番であれば、NFTの処理を実行
+    // addressが有効でカウンタがキリ番であれば、NFTの処理を実行
     if (address && isMilestoneNumber(counterData.count)) {
       try {
         const tokenId = await mintNFT(counterId, address);

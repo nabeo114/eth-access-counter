@@ -43,8 +43,6 @@ app.get("/counter/:counterId", async (req: Request, res: Response) => {
   const { counterId } = req.params;
   const { address } = req.query;
 
-  console.log(address);
-
   // counterId が存在しない場合はエラーレスポンスを返す
   if (!counterId || typeof counterId !== "string") {
     res.status(400).json({ error: "Counter ID must be a valid string" });
@@ -61,7 +59,7 @@ app.get("/counter/:counterId", async (req: Request, res: Response) => {
 
   try {
     // カウンタをインクリメント
-    const {count, digit} = await incrementCount(counterId, accessIp, address as string);
+    const { count, digit } = await incrementCount(counterId, accessIp, address as string);
 
     // カウンタ画像を取得
     const imageData = await getCounterImage(count, digit);

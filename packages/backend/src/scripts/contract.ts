@@ -84,54 +84,44 @@ export async function deployContract(counterId: string, contractName: string) {
       throw new Error("Private key not found in environment variables.");
     }
 
-    // ウォレットを作成
-//    const wallet = new ethers.Wallet(privateKey);
-
     // プロバイダーを設定
     const provider = new ethers.JsonRpcProvider(providerUrl);
-//    const walletWithProvider = wallet.connect(provider);
 
-    // ウォレットを作成
+    // ウォレットを作成（秘密鍵とプロバイダーを関連付け）
     const wallet = new ethers.Wallet(privateKey, provider);
     
-    // コントラクトをデプロイ
-//    const myToken = await ethers.deployContract(contractName, walletWithProvider);
+    // コントラクトのファクトリを作成
     const contractFactory = new ethers.ContractFactory(contractJsonData.abi, contractJsonData.bytecode, wallet);
 
-    const fixedGasLimit = 300000; // ガスリミットを300,000に設定
-    // 最大ガス料金と最大優先料金を設定
+    // 最大ガス料金と最大優先料金を設定（EIP-1559対応）
     const maxFeePerGas = ethers.parseUnits("40", "gwei"); // 最大料金（40 gweiに設定）
     const maxPriorityFeePerGas = ethers.parseUnits("30", "gwei"); // 優先料金（30 gweiに設定）
 
-    // まず、ガスプライスを見積もりで取得（v6ではこれを使います）
+    // コントラクトのデプロイに必要なガス量を見積もり
     const gasEstimate = await provider.estimateGas({
-      to: "0x0000000000000000000000000000000000000000", // 例として適当なアドレスを指定
+      to: "0x0000000000000000000000000000000000000000", // 送信先アドレスはダミー（見積もり用）
       data: contractJsonData.bytecode // コントラクトのバイトコード
     });
     console.log(`Estimated Gas: ${gasEstimate.toString()}`);
 
+    // コントラクトをデプロイ
     const contract = await contractFactory.deploy(wallet.address, {
-      maxFeePerGas: maxFeePerGas, // 選択されたガス価格を使用
-//      gasLimit: fixedGasLimit, // ガスリミットを設定
-//      gasPrice: maxFeePerGas, // 最大ガス料金
-      maxPriorityFeePerGas: maxPriorityFeePerGas, // 最大優先料金
+      maxFeePerGas, // 最大ガス料金
+      maxPriorityFeePerGas, // 最大優先料金
     });
     console.log("Contract deployment transaction sent.");
 
     // デプロイ完了まで待機
-//    await myToken.waitForDeployment();
     await contract.waitForDeployment();
     console.log("Contract deployed.");
 
-    // トランザクションレシートを取得
-//    const txReceipt = await myToken.deploymentTransaction().wait();
+    // トランザクションのレシートを取得
     const txReceipt = await contract.deploymentTransaction()!.wait();
-    // ABIを取得
-//    const contractABI = myToken.interface.formatJson();
-    const contractABI = JSON.stringify(contractJsonData.abi, null, 2);
-
     console.log(`Contract deployed at address: ${txReceipt!.contractAddress}`);
     console.log(`Transaction hash: ${txReceipt!.hash}`);
+
+    // コントラクトのABIを取得
+    const contractABI = JSON.stringify(contractJsonData.abi, null, 2);
 
     const contractData = {
       counterId: counterId,
@@ -146,7 +136,7 @@ export async function deployContract(counterId: string, contractName: string) {
 
     return contractData;
   } catch (error) {
-    console.log(error);
+    console.error(error);
     throw new Error(`Failed to deploy ${contractName} contract: ${(error as Error).message}`);
   }
 };
@@ -217,7 +207,7 @@ export async function mintNFT(counterId: string, address: string) {
     console.log(`Minted NFT to ${address}`);
     console.log(`Transaction hash: ${tx.hash}`);
 
-    console.log("Logs:", receipt.logs);
+//    console.log("Logs:", receipt.logs);
 
     // `Transfer` イベントを取得 (logs 経由)
     const iface = new ethers.Interface([
@@ -246,7 +236,7 @@ export async function mintNFT(counterId: string, address: string) {
     // tokenIdを返却
     return tokenId;
   } catch (error) {
-    console.log(error);
+    console.error(error);
     throw new Error(`Failed to mint NFT: ${(error as Error).message}`);
   }
 }
