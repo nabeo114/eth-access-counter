@@ -59,10 +59,10 @@ app.get("/counter/:counterId", async (req: Request, res: Response) => {
 
   try {
     // カウンタをインクリメント
-    const { count, digit } = await incrementCount(counterId, accessIp, address as string);
+    const { count, digit, nftMinted } = await incrementCount(counterId, accessIp, address as string);
 
     // カウンタ画像を取得
-    const imageData = await getCounterImage(count, digit);
+    const imageData = await getCounterImage(count, digit, nftMinted);
     res.setHeader("Content-Type", "image/png");
     res.send(imageData);
   } catch (error: any) {

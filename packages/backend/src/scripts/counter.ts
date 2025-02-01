@@ -76,7 +76,7 @@ function isMilestoneNumber(num: number) {
 }
 
 // カウンタをインクリメントする非同期関数
-export async function incrementCount(counterId: string, accessIp: string, address: string): Promise<{ count: number, digit: number }> {
+export async function incrementCount(counterId: string, accessIp: string, address: string): Promise<{ count: number, digit: number, nftMinted: boolean }> {
   try {
     // ファイルが存在しなければ例外をスロー
     if (!fs.existsSync(counterDataFilePath)) {
@@ -101,6 +101,8 @@ export async function incrementCount(counterId: string, accessIp: string, addres
       counterData.updated = Math.floor(Date.now() / 1000);
 //    }
 
+  let nftMinted = false;
+
     // addressが有効でカウンタがキリ番であれば、NFTの処理を実行
     if (address && isMilestoneNumber(counterData.count)) {
       try {
@@ -110,6 +112,8 @@ export async function incrementCount(counterId: string, accessIp: string, addres
         // NFTアセットを作成
         generateNFTMetadata(counterId, tokenId, counterData.count);
         generateNFTImage(counterId, tokenId, counterData.count, counterData.digit);
+
+        nftMinted = true; // NFT発行成功
       } catch (nftError) {
         console.error(`Failed to mint NFT: ${(nftError as Error).message}`);
       }
@@ -120,39 +124,61 @@ export async function incrementCount(counterId: string, accessIp: string, addres
 
     console.log(counterData.count);
 
-    return { count: counterData.count, digit: counterData.digit };
+    return { count: counterData.count, digit: counterData.digit, nftMinted };
   } catch (error) {
     throw new Error(`Failed to increment count: ${(error as Error).message}`);
   }
 };
 
 // カウンタ画像を取得する非同期関数
-export async function getCounterImage(count: number, digit: number): Promise<Buffer> {
+export async function getCounterImage(count: number, digit: number, nftMinted: boolean): Promise<Buffer> {
   try {
     // カウントを桁数に合わせてゼロ埋め
     const formattedCount = count.toString().padStart(digit, "0");
 
     // 動的にキャンバスサイズとフォントサイズを計算
     const fontSize = 20; // 基本フォントサイズ
-    const padding = 4; // 上下左右の余白
-    const textWidth = formattedCount.length * fontSize * 0.6; // 文字幅の目安
-    const canvasWidth = textWidth + padding * 2;
-    const canvasHeight = fontSize + padding * 2;
+    const padding = 10; // 上下左右の余白
+    const ctx = createCanvas(1, 1).getContext("2d"); // 仮のCanvasでテキスト幅を測定
+    ctx.font = `${fontSize}px Arial`;
+
+    // カウンタの幅を計算
+    const countTextWidth = ctx.measureText(formattedCount).width;
+
+    // NFTメッセージの幅を計算
+    const nftMessage = "You got NFT!";
+    const nftTextWidth = ctx.measureText(nftMessage).width;
+
+    // 幅はカウンタ文字列とNFTメッセージの大きい方に合わせる
+    const canvasWidth = Math.max(countTextWidth, nftTextWidth) + padding * 2;
+
+    // 高さを計算（NFTメッセージがある場合は2行分のスペース）
+    let canvasHeight = fontSize + padding * 2;
+    if (nftMinted) {
+      canvasHeight += fontSize * 1.5 + padding;
+    }
 
     // canvasを生成
     const canvas = createCanvas(canvasWidth, canvasHeight);
-    const ctx = canvas.getContext("2d");
+    const ctx2 = canvas.getContext("2d");
   
     // 背景を白に設定
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+    ctx2.fillStyle = "#ffffff";
+    ctx2.fillRect(0, 0, canvasWidth, canvasHeight);
   
     // カウントを黒色で描画
-    ctx.fillStyle = "#000000";
-    ctx.font = `${fontSize}px Arial`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(formattedCount, canvasWidth / 2, canvasHeight / 2);
+    ctx2.fillStyle = "#000000";
+    ctx2.font = `${fontSize}px Arial`;
+    ctx2.textAlign = "center";
+    ctx2.textBaseline = "middle";
+    ctx2.fillText(formattedCount, canvasWidth / 2, fontSize);
+
+    // NFT発行時のメッセージを追加
+    if (nftMinted) {
+      ctx2.fillStyle = "#ff0000"; // 赤色
+      ctx2.font = `${fontSize * 0.8}px Arial`; // 少し小さめのフォント
+      ctx2.fillText(nftMessage, canvasWidth / 2, fontSize * 2.2);
+    }
 
     // 画像データをバッファとして取得
     const counterImage = canvas.toBuffer("image/png");

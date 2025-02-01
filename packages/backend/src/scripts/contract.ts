@@ -93,21 +93,23 @@ export async function deployContract(counterId: string, contractName: string) {
     // コントラクトのファクトリを作成
     const contractFactory = new ethers.ContractFactory(contractJsonData.abi, contractJsonData.bytecode, wallet);
 
+    // Memo: 暫定的に固定値で実装したが、Gas Station APIエンドポイントで取得したmaxFee, maxPriorityFeeを利用するようにしたほうが良い
     // 最大ガス料金と最大優先料金を設定（EIP-1559対応）
     const maxFeePerGas = ethers.parseUnits("40", "gwei"); // 最大料金（40 gweiに設定）
     const maxPriorityFeePerGas = ethers.parseUnits("30", "gwei"); // 優先料金（30 gweiに設定）
 
     // コントラクトのデプロイに必要なガス量を見積もり
-    const gasEstimate = await provider.estimateGas({
-      to: "0x0000000000000000000000000000000000000000", // 送信先アドレスはダミー（見積もり用）
-      data: contractJsonData.bytecode // コントラクトのバイトコード
-    });
-    console.log(`Estimated Gas: ${gasEstimate.toString()}`);
+//    const gasEstimate = await provider.estimateGas({
+//      to: "0x0000000000000000000000000000000000000000", // 送信先アドレスはダミー（見積もり用）
+//      data: contractJsonData.bytecode // コントラクトのバイトコード
+//    });
+//    console.log(`Estimated Gas: ${gasEstimate.toString()}`);
 
     // コントラクトをデプロイ
     const contract = await contractFactory.deploy(wallet.address, {
       maxFeePerGas, // 最大ガス料金
       maxPriorityFeePerGas, // 最大優先料金
+//      gasLimit: gasEstimate // // 見積もったガスリミットを使用
     });
     console.log("Contract deployment transaction sent.");
 

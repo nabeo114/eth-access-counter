@@ -76,7 +76,7 @@ const CounterCreator: React.FC = () => {
           <div style={{ marginTop: "20px" }}>
             <Typography variant="subtitle1" gutterBottom>
               以下のHTMLタグをコピーして使用してください。  
-              Ethereumアカウントアドレスをクエリパラメータ（例: `?address=0xYourEthereumAddress`）として渡すと、指定されたアドレスに対してキリ番を取得した際にNFTが発行されます。
+              Ethereumアドレスをクエリパラメータ（例: `?address=0xYourEthereumAddress`）として渡すと、指定されたアドレスがキリ番を取得した際にNFTが発行されます。
             </Typography>
             <TextField
               value={`<table border="0" cellspacing="0" cellpadding="0"><tr><td align="center"><a href="http://localhost:3000/"><img src="http://localhost:5000/counter/${counterId}/" alt="アクセスカウンター" border="0"></a></td></tr></table>`}
