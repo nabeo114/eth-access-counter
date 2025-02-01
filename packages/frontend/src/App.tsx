@@ -71,8 +71,9 @@ const CounterCreator: React.FC = () => {
         >
           カウンター作成
         </Button>
-        <Divider sx={{ my: 2 }} />
         {counterId && (
+          <>
+          <Divider sx={{ my: 2 }} />
           <div style={{ marginTop: "20px" }}>
             <Typography variant="subtitle1" gutterBottom>
               以下のHTMLタグをコピーして使用してください。  
@@ -108,6 +109,7 @@ const CounterCreator: React.FC = () => {
               />
             </div>
           </div>
+          </>
         )}
       </CardContent>
     </Card>
