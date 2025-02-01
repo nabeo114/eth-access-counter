@@ -72,16 +72,16 @@ const Metamask: React.FC = () => {
           <CardContent>
             {accountAddress && (
               <>
-                <Typography variant="h6">
-                  Account Address: <Typography component="span" variant="body1" color="textSecondary">
+                <Typography variant="body2" color="textSecondary">
+                  Account Address: <Typography component="span" variant="body1" color="textPrimary">
                     {accountAddress}
                   </Typography>
                 </Typography>
               </>
             )}
             {balance && (
-              <Typography variant="h6">
-                Balance: <Typography component="span" variant="body1" color="textSecondary">
+              <Typography variant="body2" color="textSecondary">
+                Balance: <Typography component="span" variant="body1" color="textPrimary">
                   {balance}
                 </Typography>
               </Typography>
@@ -89,13 +89,13 @@ const Metamask: React.FC = () => {
             {(networkName && networkChainId) && (
               <>
                 <Divider sx={{ my: 2 }} />
-                <Typography variant="h6">
-                  Network Name: <Typography component="span" variant="body1" color="textSecondary">
+                <Typography variant="body2" color="textSecondary">
+                  Network Name: <Typography component="span" variant="body1" color="textPrimary">
                     {networkName}
                   </Typography>
                 </Typography>
-                <Typography variant="h6">
-                  Chain ID: <Typography component="span" variant="body1" color="textSecondary">
+                <Typography variant="body2" color="textSecondary">
+                  Chain ID: <Typography component="span" variant="body1" color="textPrimary">
                     {networkChainId}
                   </Typography>
                 </Typography>
