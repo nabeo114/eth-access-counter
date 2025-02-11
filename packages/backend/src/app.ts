@@ -1,19 +1,16 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
-import bodyParser from "body-parser";
 import { createCounter, incrementCount, getCounterImage } from "./scripts/counter";
 import { getNFTMetadata, getNFTImage } from "./scripts/asset";
 
 const app = express();
-const port = 5000;
-
-app.use(bodyParser.json());
-
+app.use(express.json());
 app.use(cors({
   origin: "http://localhost:3000",
   methods: ["GET", "POST"],
   allowedHeaders: ["Content-Type"],
 }));
+const port = 5000;
 
 // アクセスカウンタを作成するエンドポイント
 app.post("/create-counter", async (req: Request, res: Response) => {
