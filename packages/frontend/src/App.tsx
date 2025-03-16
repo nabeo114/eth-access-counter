@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Card, CardContent, Button, TextField, Typography, Divider, Alert } from "@mui/material";
 import { BrowserRouter as Router, Route, Routes, useParams } from "react-router-dom";
 import axios from "axios";
+import { MetamaskProvider } from "./contexts/MetamaskContext";
+import Layout from "./components/Layout";
 
 const CounterCreator: React.FC = () => {
   const [initCount, setInitCount] = useState<number>(0);
@@ -21,7 +23,7 @@ const CounterCreator: React.FC = () => {
     }
 
     try {
-      const response = await axios.post("http://localhost:5000/create-counter", {
+      const response = await axios.post("http://localhost:5001/create-counter", {
         initCount,
         digit,
       });
@@ -80,7 +82,7 @@ const CounterCreator: React.FC = () => {
               Ethereumアドレスをクエリパラメータ（例: `?address=0xYourEthereumAddress`）として渡すと、指定されたアドレスがキリ番を取得した際にNFTが発行されます。
             </Typography>
             <TextField
-              value={`<table border="0" cellspacing="0" cellpadding="0"><tr><td align="center"><a href="http://localhost:3000/"><img src="http://localhost:5000/counter/${counterId}/" alt="アクセスカウンター" border="0"></a></td></tr></table>`}
+              value={`<table border="0" cellspacing="0" cellpadding="0"><tr><td align="center"><a href="http://localhost:3000/"><img src="http://localhost:5001/counter/${counterId}/" alt="アクセスカウンター" border="0"></a></td></tr></table>`}
               fullWidth
               multiline
               rows={4}
@@ -93,7 +95,7 @@ const CounterCreator: React.FC = () => {
                 プレビュー
               </Typography>
               <img
-                src={`http://localhost:5000/counter/${counterId}`}
+                src={`http://localhost:5001/counter/${counterId}`}
                 alt="アクセスカウンター"
                 style={{
                   display: "block",
@@ -124,7 +126,7 @@ const CounterDisplay: React.FC = () => {
   React.useEffect(() => {
     const fetchCount = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/counter/${counterId}`);
+        const response = await axios.get(`http://localhost:5001/counter/${counterId}`);
         if (response.status === 200) {
           setCount(response.data.count);
         } else {
@@ -163,10 +165,14 @@ const CounterDisplay: React.FC = () => {
 const App: React.FC = () => {
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<CounterCreator />} />
-        <Route path="/:counterId" element={<CounterDisplay />} />
-      </Routes>
+      <MetamaskProvider>
+        <Layout>
+          <Routes>
+            <Route path="/" element={<CounterCreator />} />
+            <Route path="/:counterId" element={<CounterDisplay />} />
+          </Routes>
+        </Layout>
+      </MetamaskProvider>
     </Router>
   );
 };
