@@ -25,6 +25,10 @@ const Header: React.FC = () => {
     }
   };
 
+  const handleConnect = () => {
+    connectMetamask();
+  } 
+
   const handleDisconnect = () => {
     disconnectMetamask();
     setAccount(null);
@@ -57,7 +61,7 @@ const Header: React.FC = () => {
             variant="contained"
             color="primary"
             startIcon={<AccountBalanceWallet />}
-            onClick={connectMetamask}
+            onClick={handleConnect}
             sx={{
               textTransform: "none",
               borderRadius: 2,

@@ -1,16 +1,57 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
+import { generateNonce, SiweMessage } from "siwe";
 import { createCounter, incrementCount, getCounterImage } from "./scripts/counter";
 import { getNFTMetadata, getNFTImage } from "./scripts/asset";
 
 const app = express();
 app.use(express.json());
-app.use(cors({
+// デフォルトのCORS設定（認証不要API用）
+const corsOptions = {
   origin: "http://localhost:3000",
   methods: ["GET", "POST"],
   allowedHeaders: ["Content-Type"],
-}));
-const port = 5000;
+};
+// 認証が必要なAPIのCORS設定
+const corsOptionsWithCredentials = {
+  origin: "http://localhost:3000",
+  methods: ["GET", "POST"],
+  allowedHeaders: ["Content-Type"],
+  credentials: true,
+};
+// CORSミドルウェア（認証が必要なAPIを動的に設定）
+app.use((req, res, next) => {
+  if (req.path.startsWith("/signin")) {
+    cors(corsOptionsWithCredentials)(req, res, next);
+  } else {
+    cors(corsOptions)(req, res, next);
+  }
+});
+const port = process.env.PORT || 5001;
+
+app.get("/signin/nonce", async (req: Request, res: Response) => {
+  try {
+    const nonce = generateNonce();
+    res.json({nonce});
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/signin/verify", async (req: Request, res: Response) => {
+  const { message, signature } = req.body;
+  try {
+    const siweMessage = new SiweMessage(message);
+    const result = await siweMessage.verify({ signature });
+    if (result.success) {
+      res.json(result.data);
+    } else {
+      res.status(401).json({ error: result.error });
+    }
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // アクセスカウンタを作成するエンドポイント
 app.post("/create-counter", async (req: Request, res: Response) => {
@@ -100,6 +141,11 @@ app.get("/assets/image/:counterId/:imageFile", async (req: Request, res: Respons
   }
 });
 
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
-});
+// ローカル開発用にサーバーを起動（Lambda 環境では不要）
+if (process.env.NODE_ENV !== "lambda") {
+  app.listen(port, () => {
+    console.log(`Server running at http://localhost:${port}`);
+  });
+}
+
+export default app;
