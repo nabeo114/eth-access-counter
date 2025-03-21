@@ -5,7 +5,7 @@ import { useMetamask } from "../contexts/MetamaskContext";
 import { copyToClipboard } from "../utils";
 
 const Header: React.FC = () => {
-  const { signer, connectMetamask, disconnectMetamask } = useMetamask();
+  const { signer, connectMetamask, disconnectMetamask, signInWithEthereum } = useMetamask();
   const [account, setAccount] = useState<string | null>(null);
 
   useEffect(() => {
@@ -27,6 +27,7 @@ const Header: React.FC = () => {
 
   const handleConnect = () => {
     connectMetamask();
+    signInWithEthereum();
   } 
 
   const handleDisconnect = () => {

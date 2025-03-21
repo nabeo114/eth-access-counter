@@ -27,7 +27,6 @@ const CounterCreator: React.FC = () => {
         initCount,
         digit,
       });
-
       if (response.status === 200) {
         setCounterId(response.data.counterId);
         console.log("カウンター作成成功:", response.data);

@@ -16,6 +16,7 @@ interface MetamaskContextType {
   connectMetamask: () => Promise<void>;
   disconnectMetamask: () => void;
   isConnected: boolean;
+  signInWithEthereum: () => Promise<void>;
   isAuthenticated: boolean;
   error: string | null;
 }
@@ -35,6 +36,7 @@ export const MetamaskProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [signer, setSigner] = useState<ethers.Signer | null>(null);
   const [network, setNetwork] = useState<ethers.Network | null>(null);
   const [isConnected, setIsConnected] = useState<boolean>(false);
+  const [pendingSignIn, setPendingSignIn] = useState<boolean>(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -57,8 +59,6 @@ export const MetamaskProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setError(null);
 
       localStorage.setItem("metamaskConnected", "true");
-
-      signInWithEthereum(signer, network);
     } catch (error) {
       console.error("Error connecting to Metamask:", (error as Error).message);
       setError((error as Error).message);
@@ -74,11 +74,24 @@ export const MetamaskProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setIsAuthenticated(false);
     setError(null);
     localStorage.removeItem("metamaskConnected");
+    localStorage.removeItem("ethereumAuthenticated");
   };
 
   // SIWE認証を行う関数
-  const signInWithEthereum = async (signer: ethers.Signer, network: ethers.Network) => {
+  const signInWithEthereum = async () => {
     if (!signer) {
+      setPendingSignIn(true);
+      await connectMetamask();
+      if (signer) {
+        await signInWithEthereumInternal();
+      }
+    } else {
+      await signInWithEthereumInternal();
+    }
+  }
+
+  const signInWithEthereumInternal = async () => {
+    if (!signer || !network) {
       setError("Metamask is not connected.");
       return;
     }
@@ -101,20 +114,19 @@ export const MetamaskProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         statement: "Sign in with Ethereum to the app.",
         uri: origin,
         version: "1",
-        chainId: network?.chainId ? Number(network.chainId) : 1, // bigint → number へ変換
+        chainId: Number(network.chainId), // bigint → number へ変換
         nonce,
       });
       const preparedMessage = message.prepareMessage();
       const signature = await signer.signMessage(preparedMessage);
-
       // サーバーへ署名を送信し、検証
       const verifyResponse = await axios.post("http://localhost:5001/signin/verify",
         { message, signature },
         { withCredentials: true }
       );
-
       if (verifyResponse.status === 200) {
         setIsAuthenticated(true);
+        localStorage.setItem("ethereumAuthenticated", "true");
       } else {
         setError("Authentication failed.");
       }
@@ -130,9 +142,27 @@ export const MetamaskProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         await connectMetamask();
       }
     };
+    const checkAuthentication = async () => {
+      try {
+        if (localStorage.getItem("ethereumAuthenticated") === "true") {
+          const response = await axios.get("http://localhost:5001/signin/status", { withCredentials: true });
+          setIsAuthenticated(response.data.isAuthenticated);
+        }
+      } catch (error) {
+        setIsAuthenticated(false);
+      }
+    };
 
     checkMetamaskConnection();
+//    checkAuthentication();
   }, []);
+
+  useEffect(() => {
+    if (pendingSignIn && signer && network) {
+      setPendingSignIn(false);
+      signInWithEthereumInternal();
+    }
+  }, [signer, network]);
 
   const contextValue = useMemo(() => ({
     provider,
@@ -141,6 +171,7 @@ export const MetamaskProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     connectMetamask,
     disconnectMetamask,
     isConnected,
+    signInWithEthereum,
     isAuthenticated,
     error,
   }), [provider, signer, network, isConnected, isAuthenticated, error]);
