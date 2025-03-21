@@ -1,14 +1,21 @@
 import React, { useState } from "react";
 import { Card, CardContent, Button, TextField, Typography, Divider, Alert } from "@mui/material";
 import axios from "axios";
+import { useMetamask } from "../contexts/MetamaskContext";
 
 const CounterCreator: React.FC = () => {
+  const { isAuthenticated } = useMetamask();
   const [initCount, setInitCount] = useState<number>(0);
   const [digit, setDigit] = useState<number>(6);
   const [counterId, setCounterId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const createCounter = async () => {
+    if (!isAuthenticated) {
+      setError("Metamask でサインインしてください。");
+      return;
+    }
+
     if (initCount < 0) {
       setError("初期値は 0 以上の値を入力してください。");
       return;
@@ -75,7 +82,7 @@ const CounterCreator: React.FC = () => {
           <div style={{ marginTop: "20px" }}>
             <Typography variant="subtitle1" gutterBottom>
               以下のHTMLタグをコピーして使用してください。  
-              Ethereumアドレスをクエリパラメータ（例: `?address=0xYourEthereumAddress`）として渡すと、指定されたアドレスがキリ番を取得した際にNFTが発行されます。
+              Ethereumアドレスをクエリパラメータ（例: `?address=0xVisitorsEthereumAddress`）として渡すと、指定されたアドレスがキリ番を取得した際にNFTが発行されます。
             </Typography>
             <TextField
               value={`<table border="0" cellspacing="0" cellpadding="0"><tr><td align="center"><a href="http://localhost:3000/"><img src="http://localhost:5001/counter/${counterId}/" alt="アクセスカウンター" border="0"></a></td></tr></table>`}
