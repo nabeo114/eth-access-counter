@@ -1,13 +1,11 @@
 import React from "react";
-import { Container } from "@mui/material";
-import Header from "./Header";
+import { Container, Box } from "@mui/material";
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
-    <>
-      <Header />
-      <Container sx={{ py: 4 }}>{children}</Container>
-    </>
+    <Container>
+      <Box py={4}>{children}</Box>
+    </Container>
   );
 };
 

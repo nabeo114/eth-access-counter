@@ -51,7 +51,7 @@ const Header: React.FC = () => {
                 <ContentCopy />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Disconnect Wallet">
+            <Tooltip title="Disconnect Metamask">
               <IconButton onClick={handleDisconnect} size="small">
                 <Logout />
               </IconButton>
@@ -69,7 +69,7 @@ const Header: React.FC = () => {
               padding: "6px 16px",
             }}
           >
-            Connect Wallet
+            Connect Metamask
           </Button>
         )}
       </Toolbar>
