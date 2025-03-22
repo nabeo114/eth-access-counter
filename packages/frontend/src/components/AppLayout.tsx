@@ -6,7 +6,7 @@ const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <Box display="flex" flexDirection="column" minHeight="100vh">
       <Header />
-      <Box component="main" flexGrow={1} py={4}>
+      <Box component="main" flexGrow={1} py={4} sx={{ marginTop: '64px' }}>
         <Container>
           {children}
         </Container>

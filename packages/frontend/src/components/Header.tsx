@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { AppBar, Toolbar, Typography, Button, IconButton, Tooltip } from "@mui/material";
+import { AppBar, Toolbar, Box, Typography, Button, IconButton, Tooltip } from "@mui/material";
 import { AccountBalanceWallet, ContentCopy, Logout } from "@mui/icons-material";
 import { useMetamask } from "../contexts/MetamaskContext";
 import { copyToClipboard } from "../utils";
@@ -25,9 +25,9 @@ const Header: React.FC = () => {
     }
   };
 
-  const handleConnect = () => {
-    connectMetamask();
-    signInWithEthereum();
+  const handleConnect = async () => {
+    await connectMetamask();
+    await signInWithEthereum();
   } 
 
   const handleDisconnect = () => {
@@ -36,20 +36,22 @@ const Header: React.FC = () => {
   };
 
   return (
-    <AppBar position="static">
+    <AppBar position="fixed" sx={{ top: 0, left: 0, right: 0, zIndex: 1100 }}>
       <Toolbar>
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
           Eth Access Counter
         </Typography>
         {account ? (
           <div style={{ display: "flex", alignItems: "center" }}>
-            <Typography variant="body1">
-              {account.slice(0, 6)}...{account.slice(-4)}
-            </Typography>
             <Tooltip title="Copy address">
-              <IconButton onClick={handleCopy} size="small" sx={{ marginRight: 1 }}>
-                <ContentCopy />
-              </IconButton>
+              <Box display="flex" alignItems="center" onClick={handleCopy} sx={{ cursor: "pointer" }}>
+                <Typography variant="body1">
+                  {account.slice(0, 6)}...{account.slice(-4)}
+                </Typography>
+                <IconButton size="small" sx={{ marginRight: 1 }}>
+                  <ContentCopy />
+                </IconButton>
+              </Box>
             </Tooltip>
             <Tooltip title="Disconnect Metamask">
               <IconButton onClick={handleDisconnect} size="small">
