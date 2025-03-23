@@ -2,17 +2,17 @@ import React, { useState, useEffect } from "react";
 import { AppBar, Toolbar, Box, Typography, Button, IconButton, Tooltip } from "@mui/material";
 import { AccountBalanceWallet, ContentCopy, Logout } from "@mui/icons-material";
 import { useMetamask } from "../contexts/MetamaskContext";
-import { copyToClipboard } from "../utils";
+import { copyToClipboard } from "../scripts/utils";
 
 const Header: React.FC = () => {
   const { signer, connectMetamask, disconnectMetamask, signInWithEthereum } = useMetamask();
-  const [account, setAccount] = useState<string | null>(null);
+  const [accountAddress, setAccountAddress] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchAccount = async () => {
       if (signer) {
         const address = await signer.getAddress();
-        setAccount(address);
+        setAccountAddress(address);
       }
     };
 
@@ -20,8 +20,8 @@ const Header: React.FC = () => {
   }, [signer]);
 
   const handleCopy = () => {
-    if (account) {
-      copyToClipboard(account);
+    if (accountAddress) {
+      copyToClipboard(accountAddress);
     }
   };
 
@@ -32,7 +32,7 @@ const Header: React.FC = () => {
 
   const handleDisconnect = () => {
     disconnectMetamask();
-    setAccount(null);
+    setAccountAddress(null);
   };
 
   return (
@@ -41,12 +41,12 @@ const Header: React.FC = () => {
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
           Eth Access Counter
         </Typography>
-        {account ? (
+        {accountAddress ? (
           <div style={{ display: "flex", alignItems: "center" }}>
             <Tooltip title="Copy address">
               <Box display="flex" alignItems="center" onClick={handleCopy} sx={{ cursor: "pointer" }}>
                 <Typography variant="body1">
-                  {account.slice(0, 6)}...{account.slice(-4)}
+                  {accountAddress.slice(0, 6)}...{accountAddress.slice(-4)}
                 </Typography>
                 <IconButton size="small" sx={{ marginRight: 1 }}>
                   <ContentCopy />
