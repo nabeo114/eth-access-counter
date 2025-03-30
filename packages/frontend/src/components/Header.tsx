@@ -42,13 +42,13 @@ const Header: React.FC = () => {
           Eth Access Counter
         </Typography>
         {accountAddress ? (
-          <div style={{ display: "flex", alignItems: "center" }}>
+          <Box sx={{ display: "flex", alignItems: "center" }}>
             <Tooltip title="Copy address">
               <Box display="flex" alignItems="center" onClick={handleCopy} sx={{ cursor: "pointer" }}>
                 <Typography variant="body1">
                   {accountAddress.slice(0, 6)}...{accountAddress.slice(-4)}
                 </Typography>
-                <IconButton size="small" sx={{ marginRight: 1 }}>
+                <IconButton size="small" sx={{ mr: 1 }}>
                   <ContentCopy />
                 </IconButton>
               </Box>
@@ -58,18 +58,14 @@ const Header: React.FC = () => {
                 <Logout />
               </IconButton>
             </Tooltip>
-          </div>
+          </Box>
         ) : (
           <Button
             variant="contained"
             color="primary"
             startIcon={<AccountBalanceWallet />}
             onClick={handleConnect}
-            sx={{
-              textTransform: "none",
-              borderRadius: 2,
-              padding: "6px 16px",
-            }}
+            sx={{ px: 2, py: 1 }}
           >
             Connect Metamask
           </Button>

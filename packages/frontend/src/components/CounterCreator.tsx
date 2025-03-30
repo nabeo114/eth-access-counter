@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Box, Card, CardContent, Button, TextField, Typography, FormControl, FormLabel, FormControlLabel, Radio, RadioGroup, Divider, Alert } from "@mui/material";
+import { 
+  Box, Card, CardContent, Button, TextField, Typography, Divider, Alert, 
+  FormControl, FormLabel, FormControlLabel, Radio, RadioGroup, 
+  Dialog, DialogTitle, DialogContent, DialogActions 
+} from "@mui/material";
 import axios from "axios";
 import { useMetamask } from "../contexts/MetamaskContext";
 import { deployContract } from "../scripts/deploy";
-
 import nftType1ContractJson from "../contracts/MyNFT.json";
 
 const MAX_DIGIT = 10;
@@ -13,11 +16,12 @@ const CounterCreator: React.FC = () => {
   const [accountAddress, setAccountAddress] = useState<string | null>(null);
   const [initCount, setInitCount] = useState<number>(0);
   const [digit, setDigit] = useState<number>(6);
-  const [counterDesign, setCounterDesign] = useState<string>("");
+  const [counterDesign, setCounterDesign] = useState<string>("design1");
   const [nftType, setNftType] = useState<string>("nft");
-  const [nftDesign, setNftDesign] = useState<string>("");
-  const [milestoneNumberType, setMilestoneNumberType] = useState<string>("");
-  const [counterId, setCounterId] = useState<string | null>(null);
+  const [nftDesign, setNftDesign] = useState<string>("design1");
+  const [milestoneNumberType, setMilestoneNumberType] = useState<string>("type1");
+  const [counterId, setCounterId] = useState<string>("");
+  const [openDialog, setOpenDialog] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -41,41 +45,49 @@ const CounterCreator: React.FC = () => {
     return nftType1ContractJson;
   };
 
-  const createCounter = async () => {
+  const validateInputs = (): boolean => {
     if (!isAuthenticated || !signer || !accountAddress) {
       setError("Metamask でサインインしてください。");
-      return;
+      return false;
     }
-
     if (initCount < 0) {
       setError("初期値は 0 以上の値を入力してください。");
-      return;
+      return false;
     }
-
     if (digit < 1 || digit > MAX_DIGIT) {
       setError(`桁数は 1 以上 ${MAX_DIGIT} 以下の値を入力してください。`);
-      return;
+      return false;
     }
-
     if (!counterDesign) {
       setError("デザインを選択してください。");
-      return;
+      return false;
     }
-
     if (!nftType) {
       setError("タイプを選択してください。");
-      return;
+      return false;
     }
-
     if (!nftDesign) {
       setError("デザインを選択してください。");
-      return;
+      return false;
     }
-
     if (!milestoneNumberType) {
       setError("タイプを選択してください。");
-      return;
+      return false;
     }
+
+    setError(null);
+    return true;
+  };
+
+  const handleCreateCounterClick = () => {
+    if (validateInputs()) {
+      setOpenDialog(true);
+    }
+  };
+
+  const createCounter = async () => {
+    if (!validateInputs()) return;
+    setOpenDialog(false);
 
     try {
       const contractJson = getContractJson();
@@ -105,12 +117,12 @@ const CounterCreator: React.FC = () => {
   };
 
   return (
-    <Card style={{ maxWidth: 600, margin: "20px auto", padding: "20px" }}>
+    <Card sx={{ maxWidth: 600, mx: "auto", p: 2 }}>
       <CardContent>
         <Typography variant="h5" gutterBottom align="center">
           アクセスカウンター作成
         </Typography>
-        {error && <Alert severity="error" style={{ marginBottom: "20px" }}>{error}</Alert>}
+        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
           <TextField
             label="初期値 (0以上)"
@@ -129,7 +141,8 @@ const CounterCreator: React.FC = () => {
             margin="normal"
           />
         </Box>
-        <FormControl component="fieldset" sx={{ mb: 2 }}>
+        {/* 
+        <FormControl component="fieldset" sx={{ display: "flex", flexDirection: "column", mb: 2 }}>
           <FormLabel component="legend">デザイン</FormLabel>
           <RadioGroup 
             row
@@ -137,11 +150,9 @@ const CounterCreator: React.FC = () => {
             onChange={(e) => setCounterDesign(e.target.value)}
           >
             <FormControlLabel value="design1" control={<Radio />} label="デザイン 1" />
-            <FormControlLabel value="design2" control={<Radio />} label="デザイン 2" />
-            <FormControlLabel value="design3" control={<Radio />} label="デザイン 3" />
           </RadioGroup>
         </FormControl>
-        <FormControl component="fieldset" sx={{ mb: 2 }}>
+        <FormControl component="fieldset" sx={{ display: "flex", flexDirection: "column", mb: 2 }}>
           <FormLabel component="legend">タイプ</FormLabel>
           <RadioGroup 
             row
@@ -152,7 +163,7 @@ const CounterCreator: React.FC = () => {
             <FormControlLabel value="sbt" control={<Radio />} label="タイプ 2" />
           </RadioGroup>
         </FormControl>
-        <FormControl component="fieldset" sx={{ mb: 2 }}>
+        <FormControl component="fieldset" sx={{ display: "flex", flexDirection: "column", mb: 2 }}>
           <FormLabel component="legend">デザイン</FormLabel>
           <RadioGroup 
             row
@@ -160,11 +171,9 @@ const CounterCreator: React.FC = () => {
             onChange={(e) => setNftDesign(e.target.value)}
           >
             <FormControlLabel value="design1" control={<Radio />} label="デザイン 1" />
-            <FormControlLabel value="design2" control={<Radio />} label="デザイン 2" />
-            <FormControlLabel value="design3" control={<Radio />} label="デザイン 3" />
           </RadioGroup>
         </FormControl>
-        <FormControl component="fieldset" sx={{ mb: 2 }}>
+        <FormControl component="fieldset" sx={{ display: "flex", flexDirection: "column", mb: 2 }}>
           <FormLabel component="legend">タイプ</FormLabel>
           <RadioGroup 
             row
@@ -172,18 +181,34 @@ const CounterCreator: React.FC = () => {
             onChange={(e) => setMilestoneNumberType(e.target.value)}
           >
             <FormControlLabel value="type1" control={<Radio />} label="タイプ 1" />
-            <FormControlLabel value="type2" control={<Radio />} label="タイプ 2" />
           </RadioGroup>
         </FormControl>
-        <Button
-          variant="contained"
-          color="primary"
-          fullWidth
-          onClick={createCounter}
-          style={{ marginTop: "20px" }}
-        >
+        */}
+        <Button variant="contained" color="primary" fullWidth onClick={handleCreateCounterClick} sx={{ mt: 2 }}>
           カウンター作成
         </Button>
+
+        {/* 確認ダイアログ */}
+        <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+          <DialogTitle>コントラクトをデプロイしますか？</DialogTitle>
+          <DialogContent>
+            <Typography gutterBottom>
+              この操作を実行すると、新しいNFTコントラクトがブロックチェーン上にデプロイされます。
+            </Typography>
+            <Typography gutterBottom>
+              Metamask のアカウント <strong>{accountAddress}</strong> を使用し、ガス代（手数料）が発生します。
+            </Typography>
+            <Typography>
+              一度デプロイすると変更できません。問題なければ続行してください。
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+          <Button onClick={() => setOpenDialog(false)} color="secondary">いいえ</Button>
+          <Button onClick={createCounter} color="primary" autoFocus>はい</Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* 結果表示 */}
         {counterId && (
           <>
           <Divider sx={{ my: 2 }} />

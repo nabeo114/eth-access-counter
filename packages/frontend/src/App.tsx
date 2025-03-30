@@ -37,12 +37,12 @@ const CounterDisplay: React.FC = () => {
   }
 
   return (
-    <Card style={{ maxWidth: 400, margin: "20px auto", padding: "20px" }}>
+    <Card sx={{ maxWidth: 400, margin: "20px auto", padding: 2 }}>
       <CardContent>
         <Typography variant="h5" align="center">
           アクセスカウンター
         </Typography>
-        <Typography variant="h6" align="center" style={{ marginTop: "20px" }}>
+        <Typography variant="h6" align="center" sx={{ mt: 2 }}>
           現在のカウント: {count}
         </Typography>
       </CardContent>
