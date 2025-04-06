@@ -14,12 +14,12 @@ const MAX_DIGIT = 10;
 const CounterCreator: React.FC = () => {
   const { signer, isAuthenticated } = useMetamask();
   const [accountAddress, setAccountAddress] = useState<string | null>(null);
-  const [initCount, setInitCount] = useState<number>(0);
-  const [digit, setDigit] = useState<number>(6);
+  const [initialCount, setInitialCount] = useState<number>(0);
+  const [digitCount, setDigitCount] = useState<number>(6);
   const [counterDesign, setCounterDesign] = useState<string>("design1");
   const [nftType, setNftType] = useState<string>("nft");
   const [nftDesign, setNftDesign] = useState<string>("design1");
-  const [milestoneNumberType, setMilestoneNumberType] = useState<string>("type1");
+  const [milestoneType, setMilestoneType] = useState<string>("type1");
   const [counterId, setCounterId] = useState<string>("");
   const [openDialog, setOpenDialog] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,11 +50,11 @@ const CounterCreator: React.FC = () => {
       setError("Metamask でサインインしてください。");
       return false;
     }
-    if (initCount < 0) {
+    if (initialCount < 0) {
       setError("初期値は 0 以上の値を入力してください。");
       return false;
     }
-    if (digit < 1 || digit > MAX_DIGIT) {
+    if (digitCount < 1 || digitCount > MAX_DIGIT) {
       setError(`桁数は 1 以上 ${MAX_DIGIT} 以下の値を入力してください。`);
       return false;
     }
@@ -70,7 +70,7 @@ const CounterCreator: React.FC = () => {
       setError("デザインを選択してください。");
       return false;
     }
-    if (!milestoneNumberType) {
+    if (!milestoneType) {
       setError("タイプを選択してください。");
       return false;
     }
@@ -79,13 +79,13 @@ const CounterCreator: React.FC = () => {
     return true;
   };
 
-  const handleCreateCounterClick = () => {
+  const handleOpenConfirmDialog = () => {
     if (validateInputs()) {
       setOpenDialog(true);
     }
   };
 
-  const createCounter = async () => {
+  const handleCreateCounter = async () => {
     if (!validateInputs()) return;
     setOpenDialog(false);
 
@@ -94,14 +94,20 @@ const CounterCreator: React.FC = () => {
       const { contractAddress }  = await deployContract(contractJson, signer, [accountAddress]);
 
       const response = await axios.post("http://localhost:5001/create-counter", {
-        initCount,
-        digit,
-        counterDesign,
-        contractAddress,
-        abi: contractJson.abi,
-        bytecode: contractJson.bytecode,
-        nftDesign,
-        milestoneNumberType,
+        counter: {
+          initialCount,
+          digitCount,
+          milestoneType,
+        },
+        contract: {
+          address: contractAddress,
+          abi: contractJson.abi,
+          bytecode: contractJson.bytecode,
+        },
+        design: {
+          counter: counterDesign,
+          nft: nftDesign,
+        },
       });
       if (response.status === 200) {
         setCounterId(response.data.counterId);
@@ -128,16 +134,16 @@ const CounterCreator: React.FC = () => {
             label="初期値 (0以上)"
             type="number"
             fullWidth
-            value={initCount}
-            onChange={(e) => setInitCount(Number(e.target.value))}
+            value={initialCount}
+            onChange={(e) => setInitialCount(Number(e.target.value))}
             margin="normal"
           />
           <TextField
             label={`桁数 (1〜${MAX_DIGIT})`}
             type="number"
             fullWidth
-            value={digit}
-            onChange={(e) => setDigit(Number(e.target.value))}
+            value={digitCount}
+            onChange={(e) => setDigitCount(Number(e.target.value))}
             margin="normal"
           />
         </Box>
@@ -177,14 +183,14 @@ const CounterCreator: React.FC = () => {
           <FormLabel component="legend">タイプ</FormLabel>
           <RadioGroup 
             row
-            value={milestoneNumberType}
-            onChange={(e) => setMilestoneNumberType(e.target.value)}
+            value={milestoneType}
+            onChange={(e) => setMilestoneType(e.target.value)}
           >
             <FormControlLabel value="type1" control={<Radio />} label="タイプ 1" />
           </RadioGroup>
         </FormControl>
         */}
-        <Button variant="contained" color="primary" fullWidth onClick={handleCreateCounterClick} sx={{ mt: 2 }}>
+        <Button variant="contained" color="primary" fullWidth onClick={handleOpenConfirmDialog} sx={{ mt: 2 }}>
           カウンター作成
         </Button>
 
@@ -204,7 +210,7 @@ const CounterCreator: React.FC = () => {
           </DialogContent>
           <DialogActions>
           <Button onClick={() => setOpenDialog(false)} color="secondary">いいえ</Button>
-          <Button onClick={createCounter} color="primary" autoFocus>はい</Button>
+          <Button onClick={handleCreateCounter} color="primary" autoFocus>はい</Button>
           </DialogActions>
         </Dialog>
 

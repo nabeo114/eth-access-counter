@@ -1,7 +1,7 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
 import { generateNonce, SiweMessage } from "siwe";
-import { createCounter, incrementCount, getCounterImage } from "./scripts/counter";
+import { CounterData, createCounter, incrementCount, getCounterImage } from "./scripts/counter";
 import { getNFTMetadata, getNFTImage } from "./scripts/asset";
 
 const app = express();
@@ -55,21 +55,45 @@ app.post("/signin/verify", async (req: Request, res: Response) => {
 
 // アクセスカウンタを作成するエンドポイント
 app.post("/create-counter", async (req: Request, res: Response) => {
-  const { initCount, digit } = req.body;
+  const {
+    counter: { initialCount, digitCount, milestoneType },
+    contract: { address, abi, bytecode },
+    design: { counter, nft },
+  } = req.body;
 
-  // initCount と digit を number に変換
-  const initCountNum = Number(initCount);
-  const digitNum = Number(digit);
+  // initialCount と digitCount を number に変換
+  const initialCountNum = Number(initialCount);
+  const digitCountNum = Number(digitCount);
 
   // 数値に変換できない場合はエラーレスポンスを返す
-  if (isNaN(initCountNum) || isNaN(digitNum)) {
+  if (isNaN(initialCountNum) || isNaN(digitCountNum)) {
     res.status(400).json({ error: "initCount and digit must be valid numbers" });
     return;
   }
 
+  const counterData: CounterData = {
+    counterId: "",  // ここではまだ生成していないので空文字列としておく
+    counter: {
+      count: initialCountNum,
+      digit: digitCountNum,
+      milestoneType,
+    },
+    contract: {
+      address,
+      abi,
+      bytecode,
+    },
+    design: {
+      counter,
+      nft,
+    },
+    lastAccessIp: null,
+    updatedAt: 0,  
+  };
+
   try {
     // アクセスカウンタを生成
-    const counterId = await createCounter(initCountNum, digitNum);
+    const counterId = await createCounter(counterData);
     res.json(counterId);
   } catch (error: any) {
     res.status(500).json({ error: error.message });

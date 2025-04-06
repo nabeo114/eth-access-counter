@@ -4,8 +4,11 @@ import { v4 as uuidv4 } from "uuid";
 import { createCanvas } from "canvas";
 import { compileContracts, deployContract, mintNFT } from "./contract";
 import { generateNFTMetadata, generateNFTImage } from "./asset";
+//import { DynamoDB } from "aws-sdk";
 
-// Memo: 将来的に、カウンタ情報はDB(AWSであればDynamoDBなど)に保存したほうが良いかも
+// DynamoDBを使うためのクライアント
+//const dynamoDb = new DynamoDB.DocumentClient();
+
 // カウンタ情報を保存するディレクトリ（無ければ作成）
 const saveDirectory = path.join(__dirname, "..", "data");
 if (!fs.existsSync(saveDirectory)) {
@@ -15,18 +18,32 @@ if (!fs.existsSync(saveDirectory)) {
 // カウンタ情報を保存するファイル
 const counterDataFilePath = path.join(saveDirectory, "counter.json");
 
+// 環境に応じて保存先を切り替える
+const isLocal = process.env.ENV === 'local';
+
 // カウンタ情報の型
-interface CounterData {
+export interface CounterData {
   counterId: string;
-  count: number;
-  digit: number;
+  counter: {
+    count: number;
+    digit: number;
+    milestoneType: string;
+  }
+  contract: {
+    address: string;
+    abi: any;
+    bytecode: string;
+  };
+  design: {
+    counter: any;
+    nft: any;
+  };
   lastAccessIp: string | null;
-  updated: number;
-  // Memo: 将来的に、カウンタのデザインも選択できるようにしても良いかも
+  updatedAt: number;
 }
 
 // アクセスカウンタを生成する非同期関数
-export async function createCounter(initCount: number, digit: number): Promise<{ counterId: string }> {
+export async function createCounter(initialCounter: CounterData): Promise<{ counterId: string }> {
   try {
     let existingData: CounterData[] = [];
 
@@ -40,17 +57,18 @@ export async function createCounter(initCount: number, digit: number): Promise<{
     const counterId = uuidv4();
 
     // コントラクトのコンパイル
-    await compileContracts();
+//    await compileContracts();
 
     // コントラクトをデプロイ
-    await deployContract(counterId, "MyNFT");
+//    await deployContract(counterId, "MyNFT");
 
     const counterData: CounterData = {
       counterId: counterId,
-      count: initCount,
-      digit: digit,
+      counter: initialCounter.counter,
+      contract: initialCounter.contract,
+      design: initialCounter.design,
       lastAccessIp: null,
-      updated: Math.floor(Date.now() / 1000),
+      updatedAt: Math.floor(Date.now() / 1000),
     };
 
     // 既存データに新しいカウンタ情報を追加してファイルに保存
@@ -96,22 +114,22 @@ export async function incrementCount(counterId: string, accessIp: string, addres
 
     // 最後にアクセスしたIPアドレスと異なる場合はカウンタをインクリメントし、カウンタ情報を更新
 //    if (counterData.lastAccessIp !== accessIp) {
-      counterData.count++;
+      counterData.counter.count++;
       counterData.lastAccessIp = accessIp;
-      counterData.updated = Math.floor(Date.now() / 1000);
+      counterData.updatedAt = Math.floor(Date.now() / 1000);
 //    }
 
   let nftMinted = false;
 
     // addressが有効でカウンタがキリ番であれば、NFTの処理を実行
-    if (address && isMilestoneNumber(counterData.count)) {
+    if (address && isMilestoneNumber(counterData.counter.count)) {
       try {
         const tokenId = await mintNFT(counterId, address);
         console.log(`NFT minted! Token ID: ${tokenId} for address ${address}`);
 
         // NFTアセットを作成
-        generateNFTMetadata(counterId, tokenId, counterData.count);
-        generateNFTImage(counterId, tokenId, counterData.count, counterData.digit);
+        generateNFTMetadata(counterId, tokenId, counterData.counter.count);
+        generateNFTImage(counterId, tokenId, counterData.counter.count, counterData.counter.digit);
 
         nftMinted = true; // NFT発行成功
       } catch (nftError) {
@@ -122,9 +140,9 @@ export async function incrementCount(counterId: string, accessIp: string, addres
     // 更新したデータをファイルに保存
     fs.writeFileSync(counterDataFilePath, JSON.stringify(existingData, null, 2), "utf-8");
 
-    console.log(counterData.count);
+    console.log(counterData.counter.count);
 
-    return { count: counterData.count, digit: counterData.digit, nftMinted };
+    return { count: counterData.counter.count, digit: counterData.counter.digit, nftMinted };
   } catch (error) {
     throw new Error(`Failed to increment count: ${(error as Error).message}`);
   }
